@@ -4,13 +4,14 @@ from __future__ import annotations
 import streamlit as st
 
 from radigest_ui.binaries import BinaryNotFoundError, radigest_design_binary
-from radigest_ui.config import EXAMPLES_DIR, ensure_work_dirs
+from radigest_ui.config import ensure_work_dirs
 from radigest_ui.hashing import normalize_enzymes
-from radigest_ui.storage import (
-    prepare_design_run,
-    register_existing_fasta,
-    save_uploaded_fasta,
+from radigest_ui.reference_catalog import REFERENCE_CATALOG, catalog_labels
+from radigest_ui.reference_sources import (
+    reference_cache_path,
+    resolve_catalog_reference,
 )
+from radigest_ui.storage import prepare_design_run, save_uploaded_fasta
 
 ensure_work_dirs()
 
@@ -19,13 +20,15 @@ st.write(
     "Enter the experimental design target. The app will run `radigest-design` and cache the output by manifest hash."
 )
 
-reference_options = ["Upload FASTA", "Use bundled toy FASTA"]
-reference_default = st.session_state.get("reference_mode", "Upload FASTA")
+reference_options = ["Catalog reference", "Upload FASTA"]
+reference_default = st.session_state.get("reference_mode", "Catalog reference")
 reference_index = (
     reference_options.index(reference_default)
     if reference_default in reference_options
     else 0
 )
+reference_labels = catalog_labels()
+reference_ids = list(reference_labels)
 
 with st.form("design_form"):
     st.markdown("### 1. Reference")
@@ -38,12 +41,32 @@ with st.form("design_form"):
     )
 
     uploaded = None
-    if reference_mode == "Upload FASTA":
+    selected_reference_id = reference_ids[0]
+    if reference_mode == "Catalog reference":
+        selected_reference_label = st.selectbox(
+            "Reference preset",
+            [reference_labels[key] for key in reference_ids],
+            index=0,
+            key="selected_reference_label",
+        )
+        selected_reference_id = next(
+            key
+            for key, label in reference_labels.items()
+            if label == selected_reference_label
+        )
+        entry = REFERENCE_CATALOG[selected_reference_id]
+        if entry.get("description"):
+            st.caption(entry["description"])
+        if entry.get("local_path"):
+            st.caption(f"Bundled reference: `{entry['local_path']}`")
+        elif entry.get("url"):
+            st.caption(
+                f"Cached download target: `{reference_cache_path(selected_reference_id, entry)}`"
+            )
+    else:
         uploaded = st.file_uploader(
             "Reference FASTA", type=["fa", "fasta", "fna", "gz"], key="uploaded_fasta"
         )
-    else:
-        st.caption(f"Using `{EXAMPLES_DIR / 'toy.fa'}`")
 
     st.markdown("### 2. Candidate enzymes")
     enzyme_text = st.text_area(
@@ -390,7 +413,8 @@ if submitted:
                 st.stop()
             fasta_meta = save_uploaded_fasta(uploaded)
         else:
-            fasta_meta = register_existing_fasta(EXAMPLES_DIR / "toy.fa")
+            with st.spinner("Preparing cached reference"):
+                fasta_meta = resolve_catalog_reference(selected_reference_id)
 
         params = {
             "target_genome_pct": float(target_genome_pct),

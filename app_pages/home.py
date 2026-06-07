@@ -3,10 +3,12 @@ from __future__ import annotations
 import streamlit as st
 
 from radigest_ui.binaries import BinaryNotFoundError, radigest_design_binary
+from radigest_ui.cleanup import cleanup_old_work, maybe_cleanup_old_work
 from radigest_ui.config import WORK_DIR, ensure_work_dirs
 from radigest_ui.ui_helpers import set_demo_defaults
 
 ensure_work_dirs()
+maybe_cleanup_old_work()
 
 st.title("radigest")
 st.subheader("Design restriction enzyme pairs without using the command line")
@@ -36,8 +38,9 @@ with st.container(border=True):
             st.session_state["reference_mode"] = "Upload FASTA"
             st.switch_page("app_pages/design.py")
     with c2:
-        if st.button("Use bundled toy FASTA", use_container_width=True):
+        if st.button("Use catalog reference", use_container_width=True):
             set_demo_defaults(mock=False)
+            st.session_state["reference_mode"] = "Catalog reference"
             st.switch_page("app_pages/design.py")
     with c3:
         if st.button("Try UI mock demo", use_container_width=True):
@@ -52,6 +55,14 @@ st.write(
 )
 
 st.code(str(WORK_DIR), language="text")
+
+if st.button("Clean stale local work now"):
+    removed = cleanup_old_work()
+    st.success(f"Cleanup complete: {removed}")
+
+st.caption(
+    "User uploads and run outputs are eligible for automatic cleanup after 24 hours. Curated reference downloads are preserved."
+)
 
 st.info(
     "Uploaded FASTA files are processed on the machine hosting this app. Do not upload "

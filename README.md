@@ -42,11 +42,30 @@ pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
 
-Open the app, go to **Design pairs**, select either the bundled demo FASTA or upload your own FASTA, and run the design.
+Open the app, go to **Design pairs**, select either a catalog reference or upload your own FASTA, and run the design.
 
 ## UI mock mode
 
 The Design page includes **Use mock runner**. This writes fake-but-shaped result files so you can test navigation, caching, downloads, and result rendering without a real `radigest-design` binary. Turn it off for real runs.
+
+## Reference catalog
+
+Curated references live in `radigest_ui/reference_catalog.py`. The bundled toy reference is enabled by default. To expose deployment-specific public genomes, add entries with HTTPS URLs:
+
+```python
+REFERENCE_CATALOG = {
+    "toy": {"label": "Toy demo reference", "local_path": "examples/toy.fa"},
+    "my_reference": {
+        "label": "My public reference",
+        "description": "Short UI description.",
+        "url": "https://example.org/reference.fa.gz",
+        "expected_sha256": "optional-known-sha256",
+        "max_bytes": 2_000_000_000,
+    },
+}
+```
+
+URL references are streamed to disk and cached under `.radigest_work/references/<reference_id>/`. The app passes the cached local FASTA path to `radigest-design`.
 
 ## Caching model
 
@@ -66,16 +85,19 @@ Each submitted design creates a stable manifest with:
 The app hashes that manifest into a `run_key` and writes:
 
 ```text
-.radigest_work/runs/<run_key>/
-  manifest.json
-  status.json
-  stdout.txt
-  stderr.txt
-  enzymes.txt
-  out/
-    design.summary.tsv
-    design.tsv
-    design.json
+.radigest_work/
+  references/<reference_id>/       shared curated reference downloads
+  uploads/<fasta_sha256>/          user-uploaded FASTA copies
+  runs/<run_key>/
+    manifest.json
+    status.json
+    stdout.txt
+    stderr.txt
+    enzymes.txt
+    out/
+      design.summary.tsv
+      design.tsv
+      design.json
 ```
 
 If a later submission produces the same `run_key` and the expected outputs exist, the Processing page skips the binary and sends the user directly to Results.
@@ -92,9 +114,21 @@ Streamlit's caches are used only for lightweight app-level work:
 RADIGEST_DESIGN_BIN=/absolute/path/to/radigest-design
 RADIGEST_WORK_DIR=/absolute/path/to/persistent/workdir
 RADIGEST_RUN_TIMEOUT_SECONDS=0
+RADIGEST_MAX_REFERENCE_DOWNLOAD_BYTES=2147483648
 ```
 
-`RADIGEST_RUN_TIMEOUT_SECONDS=0` disables the timeout. Set a positive integer to cap single runs.
+`RADIGEST_RUN_TIMEOUT_SECONDS=0` disables the timeout. Set a positive integer to cap single runs. `RADIGEST_MAX_REFERENCE_DOWNLOAD_BYTES` caps curated reference URL downloads unless an individual catalog entry provides `max_bytes`.
+
+## Cleanup policy
+
+The app opportunistically cleans stale local work at startup and on a small fraction of page loads:
+
+- run directories older than 24 hours are deleted
+- upload directories older than 24 hours are deleted
+- temporary files older than 6 hours are deleted
+- curated cached references are preserved
+
+A manual **Clean stale local work now** button is available on the Home page.
 
 ## Streamlit Community Cloud notes
 
@@ -104,4 +138,4 @@ Commit the app files and the Linux `bin/radigest-design` binary, then deploy wit
 Main file path: streamlit_app.py
 ```
 
-The public hosted version should be treated as a demo. Uploaded FASTA files are processed on the hosted app instance and should not be considered private project storage. For larger genomes or unpublished references, self-host the same app with a persistent `RADIGEST_WORK_DIR` volume.
+The public hosted version should be treated as a demo. Uploaded FASTA files are processed on the hosted app instance, are eligible for cleanup after 24 hours, and should not be considered private project storage. For larger genomes or unpublished references, self-host the same app with a persistent `RADIGEST_WORK_DIR` volume.

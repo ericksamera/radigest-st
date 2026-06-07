@@ -31,7 +31,7 @@ def load_json_if_exists(path: Path) -> dict:
 
 
 def set_demo_defaults(mock: bool = False) -> None:
-    st.session_state["reference_mode"] = "Use bundled toy FASTA"
+    st.session_state["reference_mode"] = "Catalog reference"
     st.session_state["enzyme_text"] = "EcoRI,MseI,PstI,ApeKI,NlaIII,MspI"
     st.session_state["target_genome_pct"] = 45.833333
     st.session_state["coverage_tolerance_pct"] = 1.0
