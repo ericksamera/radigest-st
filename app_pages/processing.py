@@ -16,6 +16,7 @@ if not run_key:
     st.page_link("app_pages/design.py", label="Go to Design pairs")
     st.stop()
 
+assert run_key is not None
 run_dir = run_dir_for_key(run_key)
 manifest_path = run_dir / "manifest.json"
 if not manifest_path.exists():

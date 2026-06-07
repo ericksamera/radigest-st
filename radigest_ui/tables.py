@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import SupportsFloat, cast
 
 import pandas as pd
 import streamlit as st
@@ -48,6 +49,7 @@ def first_value(df: pd.DataFrame, column: str, default: object = "NA") -> object
 
 def format_float(value: object, digits: int = 3) -> str:
     try:
-        return f"{float(value):.{digits}f}"
+        numeric = cast(SupportsFloat, value)
+        return f"{float(numeric):.{digits}f}"
     except (TypeError, ValueError):
         return "NA"

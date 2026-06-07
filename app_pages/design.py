@@ -1,22 +1,31 @@
 from __future__ import annotations
 
-from pathlib import Path
 
 import streamlit as st
 
 from radigest_ui.binaries import BinaryNotFoundError, radigest_design_binary
 from radigest_ui.config import EXAMPLES_DIR, ensure_work_dirs
 from radigest_ui.hashing import normalize_enzymes
-from radigest_ui.storage import prepare_design_run, register_existing_fasta, save_uploaded_fasta
+from radigest_ui.storage import (
+    prepare_design_run,
+    register_existing_fasta,
+    save_uploaded_fasta,
+)
 
 ensure_work_dirs()
 
 st.title("Design enzyme pairs")
-st.write("Enter the experimental design target. The app will run `radigest-design` and cache the output by manifest hash.")
+st.write(
+    "Enter the experimental design target. The app will run `radigest-design` and cache the output by manifest hash."
+)
 
 reference_options = ["Upload FASTA", "Use bundled toy FASTA"]
 reference_default = st.session_state.get("reference_mode", "Upload FASTA")
-reference_index = reference_options.index(reference_default) if reference_default in reference_options else 0
+reference_index = (
+    reference_options.index(reference_default)
+    if reference_default in reference_options
+    else 0
+)
 
 with st.form("design_form"):
     st.markdown("### 1. Reference")
@@ -30,7 +39,9 @@ with st.form("design_form"):
 
     uploaded = None
     if reference_mode == "Upload FASTA":
-        uploaded = st.file_uploader("Reference FASTA", type=["fa", "fasta", "fna", "gz"], key="uploaded_fasta")
+        uploaded = st.file_uploader(
+            "Reference FASTA", type=["fa", "fasta", "fna", "gz"], key="uploaded_fasta"
+        )
     else:
         st.caption(f"Using `{EXAMPLES_DIR / 'toy.fa'}`")
 
@@ -44,7 +55,9 @@ with st.form("design_form"):
 
     normalized_enzymes = normalize_enzymes(enzyme_text)
     if normalized_enzymes == ["all"]:
-        st.caption("Special mode: `all` candidate enzymes will be passed directly to radigest-design.")
+        st.caption(
+            "Special mode: `all` candidate enzymes will be passed directly to radigest-design."
+        )
     else:
         st.caption(f"Parsed {len(normalized_enzymes)} unique candidate enzymes.")
 
@@ -98,7 +111,11 @@ with st.form("design_form"):
         budget_mode_label = st.selectbox(
             "Budget mode",
             budget_options,
-            index=budget_options.index(budget_default) if budget_default in budget_options else 0,
+            index=(
+                budget_options.index(budget_default)
+                if budget_default in budget_options
+                else 0
+            ),
             key="budget_mode",
         )
     with c4:
@@ -143,7 +160,9 @@ with st.form("design_form"):
         st.markdown("#### Coverage denominator")
         c1, c2 = st.columns(2)
         with c1:
-            denominator = st.selectbox("Denominator", ["non-n", "all"], index=0, key="denominator")
+            denominator = st.selectbox(
+                "Denominator", ["non-n", "all"], index=0, key="denominator"
+            )
         with c2:
             genome_bases = st.text_input(
                 "Explicit genome bases",
@@ -155,13 +174,37 @@ with st.form("design_form"):
         st.markdown("#### Size selection")
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            min_bp = st.number_input("Hard min bp", min_value=0, value=int(st.session_state.get("min_bp", 300)), step=1, key="min_bp")
+            min_bp = st.number_input(
+                "Hard min bp",
+                min_value=0,
+                value=int(st.session_state.get("min_bp", 300)),
+                step=1,
+                key="min_bp",
+            )
         with c2:
-            max_bp = st.number_input("Hard max bp", min_value=1, value=int(st.session_state.get("max_bp", 600)), step=1, key="max_bp")
+            max_bp = st.number_input(
+                "Hard max bp",
+                min_value=1,
+                value=int(st.session_state.get("max_bp", 600)),
+                step=1,
+                key="max_bp",
+            )
         with c3:
-            score_min_bp = st.number_input("Score min bp", min_value=0, value=int(st.session_state.get("score_min_bp", 1)), step=1, key="score_min_bp")
+            score_min_bp = st.number_input(
+                "Score min bp",
+                min_value=0,
+                value=int(st.session_state.get("score_min_bp", 1)),
+                step=1,
+                key="score_min_bp",
+            )
         with c4:
-            score_max_bp = st.number_input("Score max bp", min_value=1, value=int(st.session_state.get("score_max_bp", 2000)), step=1, key="score_max_bp")
+            score_max_bp = st.number_input(
+                "Score max bp",
+                min_value=1,
+                value=int(st.session_state.get("score_max_bp", 2000)),
+                step=1,
+                key="score_max_bp",
+            )
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
@@ -170,58 +213,161 @@ with st.form("design_form"):
             size_model = st.selectbox(
                 "Size model",
                 size_model_options,
-                index=size_model_options.index(default_size_model) if default_size_model in size_model_options else 0,
+                index=(
+                    size_model_options.index(default_size_model)
+                    if default_size_model in size_model_options
+                    else 0
+                ),
                 key="size_model",
             )
         with c2:
-            size_mean_bp = st.number_input("Size mean bp", value=float(st.session_state.get("size_mean_bp", 275.0)), step=1.0, key="size_mean_bp")
+            size_mean_bp = st.number_input(
+                "Size mean bp",
+                value=float(st.session_state.get("size_mean_bp", 275.0)),
+                step=1.0,
+                key="size_mean_bp",
+            )
         with c3:
-            size_sd_bp = st.number_input("Size SD bp", min_value=0.001, value=float(st.session_state.get("size_sd_bp", 85.0)), step=1.0, key="size_sd_bp")
+            size_sd_bp = st.number_input(
+                "Size SD bp",
+                min_value=0.001,
+                value=float(st.session_state.get("size_sd_bp", 85.0)),
+                step=1.0,
+                key="size_sd_bp",
+            )
         with c4:
-            size_edge_sd_bp = st.number_input("Size edge SD bp", min_value=0.001, value=float(st.session_state.get("size_edge_sd_bp", 25.0)), step=1.0, key="size_edge_sd_bp")
+            size_edge_sd_bp = st.number_input(
+                "Size edge SD bp",
+                min_value=0.001,
+                value=float(st.session_state.get("size_edge_sd_bp", 25.0)),
+                step=1.0,
+                key="size_edge_sd_bp",
+            )
 
         st.markdown("#### Digest behavior")
         c1, c2, c3 = st.columns(3)
         with c1:
-            allow_same = st.toggle("Allow same-enzyme adjacencies", value=bool(st.session_state.get("allow_same", False)), key="allow_same")
+            allow_same = st.toggle(
+                "Allow same-enzyme adjacencies",
+                value=bool(st.session_state.get("allow_same", False)),
+                key="allow_same",
+            )
         with c2:
-            include_ends = st.toggle("Include terminal fragments", value=bool(st.session_state.get("include_ends", False)), key="include_ends")
+            include_ends = st.toggle(
+                "Include terminal fragments",
+                value=bool(st.session_state.get("include_ends", False)),
+                key="include_ends",
+            )
         with c3:
-            strict_cuts = st.toggle("Require explicit cut sites", value=bool(st.session_state.get("strict_cuts", False)), key="strict_cuts")
+            strict_cuts = st.toggle(
+                "Require explicit cut sites",
+                value=bool(st.session_state.get("strict_cuts", False)),
+                key="strict_cuts",
+            )
 
         st.markdown("#### Objective and scoring weights")
         c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
-            objective_options = ["balanced", "closest-coverage", "depth-first", "feasible-lowest-coverage", "max-depth"]
+            objective_options = [
+                "balanced",
+                "closest-coverage",
+                "depth-first",
+                "feasible-lowest-coverage",
+                "max-depth",
+            ]
             default_objective = st.session_state.get("objective", "balanced")
             objective = st.selectbox(
                 "Objective",
                 objective_options,
-                index=objective_options.index(default_objective) if default_objective in objective_options else 0,
+                index=(
+                    objective_options.index(default_objective)
+                    if default_objective in objective_options
+                    else 0
+                ),
                 key="objective",
             )
         with c2:
-            coverage_tolerance_pct = st.number_input("Coverage tolerance pct-points", min_value=0.0, value=float(st.session_state.get("coverage_tolerance_pct", 0.25)), step=0.05, key="coverage_tolerance_pct")
+            coverage_tolerance_pct = st.number_input(
+                "Coverage tolerance pct-points",
+                min_value=0.0,
+                value=float(st.session_state.get("coverage_tolerance_pct", 0.25)),
+                step=0.05,
+                key="coverage_tolerance_pct",
+            )
         with c3:
-            weight_coverage = st.number_input("Weight coverage", min_value=0.0, value=float(st.session_state.get("weight_coverage", 1.0)), step=0.1, key="weight_coverage")
+            weight_coverage = st.number_input(
+                "Weight coverage",
+                min_value=0.0,
+                value=float(st.session_state.get("weight_coverage", 1.0)),
+                step=0.1,
+                key="weight_coverage",
+            )
         with c4:
-            weight_depth = st.number_input("Weight depth", min_value=0.0, value=float(st.session_state.get("weight_depth", 2.0)), step=0.1, key="weight_depth")
+            weight_depth = st.number_input(
+                "Weight depth",
+                min_value=0.0,
+                value=float(st.session_state.get("weight_depth", 2.0)),
+                step=0.1,
+                key="weight_depth",
+            )
         with c5:
-            weight_overcoverage = st.number_input("Weight overcoverage", min_value=0.0, value=float(st.session_state.get("weight_overcoverage", 0.5)), step=0.1, key="weight_overcoverage")
-        weight_insert = st.number_input("Weight insert", min_value=0.0, value=float(st.session_state.get("weight_insert", 0.25)), step=0.1, key="weight_insert")
+            weight_overcoverage = st.number_input(
+                "Weight overcoverage",
+                min_value=0.0,
+                value=float(st.session_state.get("weight_overcoverage", 0.5)),
+                step=0.1,
+                key="weight_overcoverage",
+            )
+        weight_insert = st.number_input(
+            "Weight insert",
+            min_value=0.0,
+            value=float(st.session_state.get("weight_insert", 0.25)),
+            step=0.1,
+            key="weight_insert",
+        )
 
         st.markdown("#### Runtime")
         c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
-            jobs = st.number_input("Jobs", min_value=1, value=int(st.session_state.get("jobs", 2)), step=1, key="jobs")
+            jobs = st.number_input(
+                "Jobs",
+                min_value=1,
+                value=int(st.session_state.get("jobs", 2)),
+                step=1,
+                key="jobs",
+            )
         with c2:
-            build_workers = st.number_input("Build workers", min_value=1, value=int(st.session_state.get("build_workers", 2)), step=1, key="build_workers")
+            build_workers = st.number_input(
+                "Build workers",
+                min_value=1,
+                value=int(st.session_state.get("build_workers", 2)),
+                step=1,
+                key="build_workers",
+            )
         with c3:
-            threads = st.number_input("Threads", min_value=1, value=int(st.session_state.get("threads", 2)), step=1, key="threads")
+            threads = st.number_input(
+                "Threads",
+                min_value=1,
+                value=int(st.session_state.get("threads", 2)),
+                step=1,
+                key="threads",
+            )
         with c4:
-            max_pairs = st.number_input("Max pairs", min_value=0, value=int(st.session_state.get("max_pairs", 0)), step=1, key="max_pairs")
+            max_pairs = st.number_input(
+                "Max pairs",
+                min_value=0,
+                value=int(st.session_state.get("max_pairs", 0)),
+                step=1,
+                key="max_pairs",
+            )
         with c5:
-            top = st.number_input("Report top N", min_value=0, value=int(st.session_state.get("top", 0)), step=1, key="top")
+            top = st.number_input(
+                "Report top N",
+                min_value=0,
+                value=int(st.session_state.get("top", 0)),
+                step=1,
+                key="top",
+            )
 
         use_mock_runner = st.toggle(
             "Use mock runner for UI testing",
@@ -253,7 +399,9 @@ if submitted:
             "samples": int(samples),
             "read_layout": read_layout,
             "read_length": int(read_length),
-            "budget_mode": "flowcell" if budget_mode_label == "Flowcell / run total" else "lane",
+            "budget_mode": (
+                "flowcell" if budget_mode_label == "Flowcell / run total" else "lane"
+            ),
             "flowcell_read_pairs": str(flowcell_read_pairs),
             "lane_read_pairs": str(lane_read_pairs),
             "lanes": int(lanes),
@@ -306,6 +454,10 @@ if submitted:
         st.switch_page("app_pages/processing.py", query_params={"run": run_key})
     except BinaryNotFoundError as exc:
         st.error(str(exc))
-        st.info("Enable mock runner to test the UI without a binary, or copy `radigest-design` into `bin/`.")
-    except Exception as exc:  # Streamlit-friendly guard for bad local files or parameters.
+        st.info(
+            "Enable mock runner to test the UI without a binary, or copy `radigest-design` into `bin/`."
+        )
+    except (
+        Exception
+    ) as exc:  # Streamlit-friendly guard for bad local files or parameters.
         st.error(f"Could not prepare run: {exc}")

@@ -7,7 +7,13 @@ import streamlit as st
 
 from radigest_ui.runner import expected_outputs, zip_outputs
 from radigest_ui.storage import delete_run, load_status, run_dir_for_key
-from radigest_ui.tables import first_value, format_float, read_json, read_tsv, truthy_series
+from radigest_ui.tables import (
+    first_value,
+    format_float,
+    read_json,
+    read_tsv,
+    truthy_series,
+)
 from radigest_ui.ui_helpers import active_run_key, log_tail
 
 st.title("Design results")
@@ -18,6 +24,7 @@ if not run_key:
     st.page_link("app_pages/design.py", label="Start a design")
     st.stop()
 
+assert run_key is not None
 run_dir = run_dir_for_key(run_key)
 status_path = run_dir / "status.json"
 manifest_path = run_dir / "manifest.json"
@@ -30,7 +37,11 @@ if not status_path.exists() or not manifest_path.exists():
 status = load_status(run_key)
 if status.get("state") != "DONE":
     st.warning(f"Run state is `{status.get('state', 'UNKNOWN')}`.")
-    st.page_link("app_pages/processing.py", label="Go to Processing", query_params={"run": run_key})
+    st.page_link(
+        "app_pages/processing.py",
+        label="Go to Processing",
+        query_params={"run": run_key},
+    )
     st.stop()
 
 outputs = expected_outputs(run_dir)
@@ -44,7 +55,9 @@ full_df = read_tsv(outputs["tsv"])
 report = read_json(outputs["json"])
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-best_pair = ",".join(report.get("summary", {}).get("best_pair", [])) or str(first_value(summary_df, "enzyme_pair"))
+best_pair = ",".join(report.get("summary", {}).get("best_pair", [])) or str(
+    first_value(summary_df, "enzyme_pair")
+)
 feasible_pairs = report.get("summary", {}).get("feasible_pairs")
 if feasible_pairs is None and "feasible" in summary_df.columns:
     feasible_pairs = int(truthy_series(summary_df["feasible"]).sum())
@@ -57,11 +70,13 @@ c4.metric("Predicted depth", format_float(first_value(summary_df, "predicted_dep
 
 st.caption(f"Run key: `{run_key}`")
 if manifest.get("runner") == "mock":
-    st.warning("This is mock output for UI testing. Do not use it for scientific interpretation.")
+    st.warning(
+        "This is mock output for UI testing. Do not use it for scientific interpretation."
+    )
 
-summary_tab, full_tab, plots_tab, provenance_tab, downloads_tab = st.tabs([
-    "Summary table", "Full table", "Quick plots", "Provenance + logs", "Downloads"
-])
+summary_tab, full_tab, plots_tab, provenance_tab, downloads_tab = st.tabs(
+    ["Summary table", "Full table", "Quick plots", "Provenance + logs", "Downloads"]
+)
 
 with summary_tab:
     st.subheader("Compact ranked table")
@@ -77,13 +92,24 @@ with plots_tab:
         plot_df = summary_df.head(25).copy()
         if "enzyme_pair" in plot_df.columns:
             plot_df = plot_df.set_index("enzyme_pair")
-        numeric_candidates = [c for c in ["predicted_pct", "predicted_depth", "fit_score", "weighted_fragments"] if c in plot_df.columns]
+        numeric_candidates = [
+            c
+            for c in [
+                "predicted_pct",
+                "predicted_depth",
+                "fit_score",
+                "weighted_fragments",
+            ]
+            if c in plot_df.columns
+        ]
         if numeric_candidates:
             selected = st.selectbox("Metric", numeric_candidates, index=0)
             chart_df = pd.to_numeric(plot_df[selected], errors="coerce").dropna()
             st.bar_chart(chart_df)
         else:
-            st.info("No recognized numeric summary columns were available for plotting.")
+            st.info(
+                "No recognized numeric summary columns were available for plotting."
+            )
     else:
         st.info("The summary table is empty.")
 

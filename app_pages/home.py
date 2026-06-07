@@ -24,7 +24,9 @@ with st.container(border=True):
         st.caption(f"Version response: `{info.version}`")
     except BinaryNotFoundError as exc:
         st.warning(str(exc))
-        st.caption("You can still test the UI by enabling mock mode on the Design page.")
+        st.caption(
+            "You can still test the UI by enabling mock mode on the Design page."
+        )
 
 with st.container(border=True):
     st.markdown("#### Start")

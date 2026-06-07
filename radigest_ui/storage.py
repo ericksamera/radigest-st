@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from radigest_ui.config import RUNS_DIR, UPLOADS_DIR, ensure_work_dirs
-from radigest_ui.hashing import normalize_enzymes, safe_filename, sha256_bytes, sha256_file, sha256_json
+from radigest_ui.hashing import (
+    normalize_enzymes,
+    safe_filename,
+    sha256_bytes,
+    sha256_file,
+    sha256_json,
+)
 
 
 @dataclass(frozen=True)
@@ -32,7 +38,9 @@ def save_uploaded_fasta(uploaded_file: Any) -> FASTAMeta:
     path = upload_dir / name
     if not path.exists():
         path.write_bytes(data)
-    return FASTAMeta(path=path.resolve(), sha256=digest, size_bytes=len(data), name=name)
+    return FASTAMeta(
+        path=path.resolve(), sha256=digest, size_bytes=len(data), name=name
+    )
 
 
 def register_existing_fasta(path: Path) -> FASTAMeta:
@@ -47,7 +55,13 @@ def register_existing_fasta(path: Path) -> FASTAMeta:
     )
 
 
-def _stable_manifest(fasta: FASTAMeta, enzymes: list[str], params: dict[str, Any], binary_version: str, mock_mode: bool) -> dict[str, Any]:
+def _stable_manifest(
+    fasta: FASTAMeta,
+    enzymes: list[str],
+    params: dict[str, Any],
+    binary_version: str,
+    mock_mode: bool,
+) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "app": "radigest-streamlit",
@@ -63,12 +77,20 @@ def _stable_manifest(fasta: FASTAMeta, enzymes: list[str], params: dict[str, Any
     }
 
 
-def prepare_design_run(fasta: FASTAMeta, enzyme_text: str, params: dict[str, Any], binary_version: str, mock_mode: bool = False) -> str:
+def prepare_design_run(
+    fasta: FASTAMeta,
+    enzyme_text: str,
+    params: dict[str, Any],
+    binary_version: str,
+    mock_mode: bool = False,
+) -> str:
     ensure_work_dirs()
 
     enzymes = normalize_enzymes(enzyme_text)
     if enzymes != ["all"] and len(enzymes) < 2:
-        raise ValueError("Provide at least two candidate enzymes, or use the special value 'all'.")
+        raise ValueError(
+            "Provide at least two candidate enzymes, or use the special value 'all'."
+        )
 
     stable = _stable_manifest(fasta, enzymes, params, binary_version, mock_mode)
     run_key = sha256_json(stable)
@@ -84,7 +106,9 @@ def prepare_design_run(fasta: FASTAMeta, enzyme_text: str, params: dict[str, Any
 
     manifest_path = run_dir / "manifest.json"
     if not manifest_path.exists():
-        manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+        manifest_path.write_text(
+            json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
+        )
 
     if enzymes != ["all"]:
         enzyme_file = run_dir / "enzymes.txt"
@@ -94,7 +118,10 @@ def prepare_design_run(fasta: FASTAMeta, enzyme_text: str, params: dict[str, Any
     status_path = run_dir / "status.json"
     if not status_path.exists():
         status_path.write_text(
-            json.dumps({"state": "QUEUED", "created_at": utc_now(), "run_key": run_key}, indent=2),
+            json.dumps(
+                {"state": "QUEUED", "created_at": utc_now(), "run_key": run_key},
+                indent=2,
+            ),
             encoding="utf-8",
         )
 

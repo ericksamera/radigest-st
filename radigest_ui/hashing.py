@@ -52,7 +52,9 @@ def normalize_enzymes(text: str) -> list[str]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        raw.extend(part.strip() for part in re.split(r"[,\t\r\n ]+", line) if part.strip())
+        raw.extend(
+            part.strip() for part in re.split(r"[,\t\r\n ]+", line) if part.strip()
+        )
 
     seen: set[str] = set()
     out: list[str] = []

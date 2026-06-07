@@ -56,6 +56,7 @@ def radigest_design_binary() -> BinaryInfo:
         return BinaryInfo(path=candidate, version=version)
 
     raise BinaryNotFoundError(
-        "Could not find radigest-design. Checked: " + ", ".join(checked) +
-        ". Put it at bin/radigest-design or set RADIGEST_DESIGN_BIN."
+        "Could not find radigest-design. Checked: "
+        + ", ".join(checked)
+        + ". Put it at bin/radigest-design or set RADIGEST_DESIGN_BIN."
     )
