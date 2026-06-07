@@ -1,0 +1,6 @@
+EcoRI
+MseI
+PstI
+ApeKI
+NlaIII
+MspI

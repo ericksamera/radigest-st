@@ -1,0 +1,7 @@
+[server]
+maxUploadSize = 1024
+headless = true
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
