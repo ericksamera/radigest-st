@@ -19,15 +19,12 @@ def _startup_cleanup() -> dict[str, int]:
 _startup_cleanup()
 maybe_cleanup_old_work()
 
-PAGES = {
-    "radigest": [
-        st.Page("app_pages/home.py", title="Home", icon="🏠", url_path="home"),
-        st.Page(
-            "app_pages/design.py", title="Design pairs", icon="🧪", url_path="design"
-        ),
-        st.Page("app_pages/results.py", title="Results", icon="📊", url_path="results"),
-    ]
-}
+PAGES = [
+    st.Page("app_pages/home.py", title="Home", url_path="home"),
+    st.Page("app_pages/design.py", title="Design pairs", url_path="design"),
+    st.Page("app_pages/results.py", title="Results", url_path="results"),
+]
+
 
 pg = st.navigation(PAGES, position="sidebar", expanded=True)
 pg.run()
