@@ -49,7 +49,9 @@ def _reference_filename(entry: dict[str, Any]) -> str:
     return "reference.fa.gz"
 
 
-def reference_cache_path(reference_id: str, entry: dict[str, Any] | None = None) -> Path:
+def reference_cache_path(
+    reference_id: str, entry: dict[str, Any] | None = None
+) -> Path:
     if entry is None:
         entry = REFERENCE_CATALOG[reference_id]
     return REFERENCES_DIR / reference_id / _reference_filename(entry)
@@ -75,7 +77,9 @@ def _write_source_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def _download_reference(reference_id: str, entry: dict[str, Any], dest: Path) -> FASTAMeta:
+def _download_reference(
+    reference_id: str, entry: dict[str, Any], dest: Path
+) -> FASTAMeta:
     url = str(entry.get("url", "")).strip()
     if not url:
         raise ValueError(f"Reference catalog entry {reference_id!r} has no URL.")

@@ -37,11 +37,7 @@ if not status_path.exists() or not manifest_path.exists():
 status = load_status(run_key)
 if status.get("state") != "DONE":
     st.warning(f"Run state is `{status.get('state', 'UNKNOWN')}`.")
-    st.page_link(
-        "app_pages/processing.py",
-        label="Go to Processing",
-        query_params={"run": run_key},
-    )
+    st.page_link("app_pages/design.py", label="Return to Design pairs")
     st.stop()
 
 outputs = expected_outputs(run_dir)
@@ -74,88 +70,78 @@ if manifest.get("runner") == "mock":
         "This is mock output for UI testing. Do not use it for scientific interpretation."
     )
 
-summary_tab, full_tab, plots_tab, provenance_tab, downloads_tab = st.tabs(
-    ["Summary table", "Full table", "Quick plots", "Provenance + logs", "Downloads"]
-)
-
-with summary_tab:
-    st.subheader("Compact ranked table")
-    st.dataframe(summary_df, use_container_width=True, hide_index=True)
-
-with full_tab:
-    st.subheader("Full machine-readable table")
-    st.dataframe(full_df, use_container_width=True, hide_index=True)
-
-with plots_tab:
-    st.subheader("Top-pair diagnostics")
-    if not summary_df.empty:
-        plot_df = summary_df.head(25).copy()
-        if "enzyme_pair" in plot_df.columns:
-            plot_df = plot_df.set_index("enzyme_pair")
-        numeric_candidates = [
-            c
-            for c in [
-                "predicted_pct",
-                "predicted_depth",
-                "fit_score",
-                "weighted_fragments",
-            ]
-            if c in plot_df.columns
+st.subheader("Top-pair diagnostics")
+if not summary_df.empty:
+    plot_df = summary_df.head(25).copy()
+    if "enzyme_pair" in plot_df.columns:
+        plot_df = plot_df.set_index("enzyme_pair")
+    numeric_candidates = [
+        c
+        for c in [
+            "predicted_pct",
+            "predicted_depth",
+            "fit_score",
+            "weighted_fragments",
         ]
-        if numeric_candidates:
-            selected = st.selectbox("Metric", numeric_candidates, index=0)
-            chart_df = pd.to_numeric(plot_df[selected], errors="coerce").dropna()
-            st.bar_chart(chart_df)
-        else:
-            st.info(
-                "No recognized numeric summary columns were available for plotting."
-            )
+        if c in plot_df.columns
+    ]
+    if numeric_candidates:
+        selected = st.selectbox("Metric", numeric_candidates, index=0)
+        chart_df = pd.to_numeric(plot_df[selected], errors="coerce").dropna()
+        st.bar_chart(chart_df)
     else:
-        st.info("The summary table is empty.")
+        st.info("No recognized numeric summary columns were available for plotting.")
+else:
+    st.info("The summary table is empty.")
 
-with provenance_tab:
-    st.subheader("Design report JSON")
+with st.expander("Compact ranked table", expanded=False):
+    st.dataframe(summary_df, width="stretch", hide_index=True)
+
+with st.expander("Full machine-readable table", expanded=False):
+    st.dataframe(full_df, width="stretch", hide_index=True)
+
+with st.expander("Provenance + logs", expanded=False):
+    st.markdown("#### Design report JSON")
     st.json(report, expanded=False)
 
-    with st.expander("Manifest"):
-        st.json(manifest, expanded=False)
+    st.markdown("#### Manifest")
+    st.json(manifest, expanded=False)
 
     stderr = log_tail(run_dir / "stderr.txt")
     stdout = log_tail(run_dir / "stdout.txt")
-    with st.expander("stderr log", expanded=bool(stderr)):
-        st.code(stderr or "No stderr captured.", language="text")
-    with st.expander("stdout log"):
-        st.code(stdout or "No stdout captured.", language="text")
+    st.markdown("#### stderr log")
+    st.code(stderr or "No stderr captured.", language="text")
+    st.markdown("#### stdout log")
+    st.code(stdout or "No stdout captured.", language="text")
 
-with downloads_tab:
-    st.subheader("Download outputs")
+with st.expander("Downloads", expanded=False):
     st.download_button(
         "Download compact summary TSV",
         data=outputs["summary_tsv"].read_bytes(),
         file_name="design.summary.tsv",
         mime="text/tab-separated-values",
-        use_container_width=True,
+        width="stretch",
     )
     st.download_button(
         "Download full TSV",
         data=outputs["tsv"].read_bytes(),
         file_name="design.tsv",
         mime="text/tab-separated-values",
-        use_container_width=True,
+        width="stretch",
     )
     st.download_button(
         "Download JSON report",
         data=outputs["json"].read_bytes(),
         file_name="design.json",
         mime="application/json",
-        use_container_width=True,
+        width="stretch",
     )
     st.download_button(
         "Download all outputs as ZIP",
         data=zip_outputs(run_dir),
         file_name=f"radigest_design_{run_key[:12]}.zip",
         mime="application/zip",
-        use_container_width=True,
+        width="stretch",
     )
 
 st.divider()

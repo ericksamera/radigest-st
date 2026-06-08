@@ -25,12 +25,6 @@ PAGES = {
         st.Page(
             "app_pages/design.py", title="Design pairs", icon="🧪", url_path="design"
         ),
-        st.Page(
-            "app_pages/processing.py",
-            title="Processing",
-            icon="⚙️",
-            url_path="processing",
-        ),
         st.Page("app_pages/results.py", title="Results", icon="📊", url_path="results"),
     ]
 }

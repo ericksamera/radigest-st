@@ -3,3 +3,4 @@ python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_configs = true
 no_implicit_optional = true
+disable_error_code = ["import-untyped"]
